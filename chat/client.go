@@ -19,7 +19,7 @@ func main() {
 		log.Fatal(err)
 	}
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Println("What's your name?")
+	log.Println("What's your name?")
 	nickname, err := reader.ReadString('\n')
 	if err != nil {
 		log.Fatal(err)
@@ -34,9 +34,11 @@ func read(conn net.Conn) {
 	for {
 		n, err := conn.Read(buffer)
 		if err != nil || n == 0 {
+			log.Print("Server is down")
 			conn.Close()
+			break
 		}
-		fmt.Print(string(buffer[0:n]))
+		fmt.Print(string(buffer[0:n-1]))
 	}
 }
 

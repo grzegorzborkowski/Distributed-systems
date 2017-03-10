@@ -3,7 +3,6 @@ package main
 import (
 	"net"
 	"log"
-	"fmt"
 )
 
 const (
@@ -20,34 +19,30 @@ type Client struct {
 	connection net.Conn
 }
 
-// TODO: fix non-clearing buffer (after couple messages, clients send too much, or server messes up - to new messages
-// TODO: content of older messages is appended
-
-// TODO: fix error in client when server fails
 func main()  {
-	tpcListener, err := net.Listen("tcp", ADDRESS)
+	tcpListener, err := net.Listen("tcp", ADDRESS)
 	if err != nil {
 		log.Fatal(err)
 	}
 	buffer := make([]byte, BUFFER_SIZE)
-	defer tpcListener.Close()
+	defer func() {
+		tcpListener.Close()
+	}()
 	for {
-		tcpConnection, err := tpcListener.Accept()
+		tcpConnection, err := tcpListener.Accept()
 		if err != nil {
 			log.Fatal(err)
 		}
-		n, err := tcpConnection.Read(buffer)
-		if err != nil || n == 0 {
-			tcpConnection.Close()
-			log.Fatal(err)
-		}
-		nickname_value := string(buffer)
-		client := Client{
+		n, _ := tcpConnection.Read(buffer)
+		if n != 0 {
+			nickname_value := string(buffer)
+			client := Client{
 			nickname : nickname_value,
-			connection: tcpConnection,
+				connection: tcpConnection,
+			}
+			connections = append(connections, client)
+			go handleConnection(client)
 		}
-		connections = append(connections, client)
-		go handleConnection(client)
 	}
 }
 
@@ -57,10 +52,10 @@ func handleConnection(client Client) {
 	for {
 		n, err := client.connection.Read(buffer)
 		if err != nil || n == 0 {
-			client.connection.Close()
-			log.Fatal(err)
+			removeClient(client)
+			break
 		}
-		fmt.Printf("%s>> %s \n", client.nickname, string(buffer))
+		log.Printf("%s>> %s \n", client.nickname, string(buffer))
 		for i := range connections {
 			if connections[i].connection != client.connection {
 				_, err := connections[i].connection.Write(buffer)
@@ -69,6 +64,17 @@ func handleConnection(client Client) {
 				}
 			}
 		}
+		buffer = make([]byte, BUFFER_SIZE)
 	}
 	log.Printf("Connection from %v closed ", client.connection.RemoteAddr())
+}
+
+func removeClient(client Client) {
+	for i := range connections {
+		if connections[i].connection == client.connection {
+			connections = append(connections[:i], connections[i+1:]...)
+			break
+		}
+	}
+	client.connection.Close()
 }
