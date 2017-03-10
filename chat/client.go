@@ -6,15 +6,37 @@ import (
 	"bufio"
 	"log"
 	"fmt"
+	"strings"
 )
 
 const (
 	ADDRESS = "127.0.0.1:8080"
 	BUFFER_SIZE = 4096
-)
+	ASCII_ART = `
+	_
+	.--' |
+	/___^ |     .--.
+	) |    /    \
+	/  |  //      '.
+	|   '-'    /     \
+	\         |      |\
+	\    /   \      /\|
+	\  /'----\\   /
+	|||       \\ |
+	((|        ((|
+	|||        |||
+	//_(       //_(
+	` )
+
+
+
 
 func main() {
 	tcpConnection, err := net.Dial("tcp", ADDRESS)
+	if err != nil {
+		log.Fatal(err)
+	}
+	udpConnection, err := net.Dial("udp", ADDRESS)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -26,30 +48,37 @@ func main() {
 		log.Fatal(err)
 	}
 	tcpConnection.Write([]byte(nickname))
-	go write(tcpConnection)
-	read(tcpConnection)
+	udpConnection.Write([]byte(nickname))
+	go write(tcpConnection, udpConnection)
+	go read(tcpConnection)
+	read(udpConnection)
 }
 
-func read(conn net.Conn) {
+func read(tcpConn net.Conn) {
 	buffer := make([]byte, BUFFER_SIZE)
 	for {
-		n, err := conn.Read(buffer)
+		n, err := tcpConn.Read(buffer)
 		if err != nil || n == 0 {
 			log.Print("Server is down")
-			conn.Close()
+			tcpConn.Close()
 			break
-		}
-		fmt.Printf("%v", string(buffer[0:n-1]))
+	}
+	fmt.Printf("%v", string(buffer[0:n-1]))
 	}
 }
 
-func write(conn net.Conn) {
+
+func write(tcpConn net.Conn, udpConn net.Conn) {
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		text, err := reader.ReadString('\n')
 		if err != nil {
 			log.Fatal(err)
 		}
-		conn.Write([]byte(text))
+		if (strings.HasPrefix(text, "-M")) {
+			udpConn.Write([]byte(ASCII_ART))
+		} else {
+		tcpConn.Write([]byte(text))
+		}
 	}
 }

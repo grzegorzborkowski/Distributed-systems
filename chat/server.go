@@ -3,6 +3,7 @@ package main
 import (
 	"net"
 	"log"
+	"fmt"
 )
 
 const (
@@ -11,7 +12,8 @@ const (
 )
 
 var (
-	connections []Client
+	tcpConnections []Client
+	//udpConnections []Client
 )
 
 type Client struct {
@@ -19,14 +21,25 @@ type Client struct {
 	connection net.Conn
 }
 
+// TODO: add sending UDP messages from server to client
+// TODO: add UDP multicast messages
 func main()  {
 	tcpListener, err := net.Listen("tcp", ADDRESS)
+	if err != nil {
+		log.Fatal(err)
+	}
+	udpAddress, err := net.ResolveUDPAddr("udp", ADDRESS)
+	if err != nil {
+		log.Fatal(err)
+	}
+	udpConnection, err := net.ListenUDP("udp4", udpAddress)
 	if err != nil {
 		log.Fatal(err)
 	}
 	buffer := make([]byte, BUFFER_SIZE)
 	defer func() {
 		tcpListener.Close()
+		udpConnection.Close()
 	}()
 	for {
 		tcpConnection, err := tcpListener.Accept()
@@ -40,8 +53,21 @@ func main()  {
 			nickname : nickname_value,
 				connection: tcpConnection,
 			}
-			connections = append(connections, client)
+			tcpConnections = append(tcpConnections, client)
 			go handleConnection(client)
+		}
+		go handleUDPConnection(*udpConnection)
+
+	}
+}
+
+func handleUDPConnection(udpConnection net.UDPConn) {
+	buffer := make([]byte, BUFFER_SIZE)
+	for {
+		_, _, err := udpConnection.ReadFromUDP(buffer)
+		fmt.Print(string(buffer))
+		if err != nil {
+			log.Fatal(err)
 		}
 	}
 }
@@ -57,9 +83,9 @@ func handleConnection(client Client) {
 		}
 		log.Printf("%s>> %s \n", client.nickname, string(buffer))
 		buffer = append([]byte(client.nickname), buffer...)
-		for i := range connections {
-			if connections[i].connection != client.connection {
-				_, err := connections[i].connection.Write(buffer)
+		for i := range tcpConnections {
+			if tcpConnections[i].connection != client.connection {
+				_, err := tcpConnections[i].connection.Write(buffer)
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -71,9 +97,9 @@ func handleConnection(client Client) {
 }
 
 func removeClient(client Client) {
-	for i := range connections {
-		if connections[i].connection == client.connection {
-			connections = append(connections[:i], connections[i+1:]...)
+	for i := range tcpConnections {
+		if tcpConnections[i].connection == client.connection {
+			tcpConnections = append(tcpConnections[:i], tcpConnections[i+1:]...)
 			break
 		}
 	}

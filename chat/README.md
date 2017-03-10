@@ -7,5 +7,5 @@ go run server.go
 
 * To run client
 ```
-    go run client.go
+go run client.go
 ```
