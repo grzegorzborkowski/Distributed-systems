@@ -56,6 +56,7 @@ func handleConnection(client Client) {
 			break
 		}
 		log.Printf("%s>> %s \n", client.nickname, string(buffer))
+		buffer = append([]byte(client.nickname), buffer...)
 		for i := range connections {
 			if connections[i].connection != client.connection {
 				_, err := connections[i].connection.Write(buffer)

@@ -4,8 +4,8 @@ import (
 	"net"
 	"os"
 	"bufio"
-	"fmt"
 	"log"
+	"fmt"
 )
 
 const (
@@ -18,9 +18,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	// TODO: fix issue when client logs in and didn't send his name yet and in meantime other client prints something
 	reader := bufio.NewReader(os.Stdin)
 	log.Println("What's your name?")
-	nickname, err := reader.ReadString('\n')
+	nickname, err := reader.ReadString(byte('\n'))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -38,7 +39,7 @@ func read(conn net.Conn) {
 			conn.Close()
 			break
 		}
-		fmt.Print(string(buffer[0:n-1]))
+		fmt.Printf("%v", string(buffer[0:n-1]))
 	}
 }
 
