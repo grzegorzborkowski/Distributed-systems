@@ -36,7 +36,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	udpConnection, err := net.Dial("udp", ADDRESS)
+	remoteAddres, err := net.ResolveUDPAddr("udp", ADDRESS)
+	if err != nil {
+		log.Fatal(err)
+	}
+	udpConnection, err := net.DialUDP("udp", nil, remoteAddres)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -48,13 +52,12 @@ func main() {
 		log.Fatal(err)
 	}
 	tcpConnection.Write([]byte(nickname))
-	udpConnection.Write([]byte(nickname))
 	go write(tcpConnection, udpConnection)
-	go read(tcpConnection)
-	read(udpConnection)
+	go readTCP(tcpConnection)
+	readUDP(udpConnection)
 }
 
-func read(tcpConn net.Conn) {
+func readTCP(tcpConn net.Conn) {
 	buffer := make([]byte, BUFFER_SIZE)
 	for {
 		n, err := tcpConn.Read(buffer)
@@ -64,6 +67,21 @@ func read(tcpConn net.Conn) {
 			break
 	}
 	fmt.Printf("%v", string(buffer[0:n-1]))
+	buffer = make([]byte, BUFFER_SIZE)
+	}
+}
+
+func readUDP(udpConnection *net.UDPConn) {
+	buffer := make([]byte, BUFFER_SIZE)
+	for {
+		n, _, err := udpConnection.ReadFromUDP(buffer)
+		if err != nil || n == 0 {
+			log.Print("Server is down")
+			udpConnection.Close()
+			break
+		}
+		fmt.Printf("%v", string(buffer[0:n-1]))
+		buffer = make([]byte, BUFFER_SIZE)
 	}
 }
 
@@ -80,5 +98,6 @@ func write(tcpConn net.Conn, udpConn net.Conn) {
 		} else {
 		tcpConn.Write([]byte(text))
 		}
+		text = ""
 	}
 }

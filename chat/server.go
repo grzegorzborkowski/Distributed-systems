@@ -4,6 +4,7 @@ import (
 	"net"
 	"log"
 	"fmt"
+	"reflect"
 )
 
 const (
@@ -13,7 +14,7 @@ const (
 
 var (
 	tcpConnections []Client
-	//udpConnections []Client
+	udpAdresses []*net.UDPAddr
 )
 
 type Client struct {
@@ -36,10 +37,13 @@ func main()  {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer func() {
+		udpConnection.Close()
+	}()
+	go handleUDPConnection(*udpConnection)
 	buffer := make([]byte, BUFFER_SIZE)
 	defer func() {
 		tcpListener.Close()
-		udpConnection.Close()
 	}()
 	for {
 		tcpConnection, err := tcpListener.Accept()
@@ -56,18 +60,33 @@ func main()  {
 			tcpConnections = append(tcpConnections, client)
 			go handleConnection(client)
 		}
-		go handleUDPConnection(*udpConnection)
-
 	}
 }
 
 func handleUDPConnection(udpConnection net.UDPConn) {
 	buffer := make([]byte, BUFFER_SIZE)
 	for {
-		_, _, err := udpConnection.ReadFromUDP(buffer)
-		fmt.Print(string(buffer))
+		_, UDPaddress, err := udpConnection.ReadFromUDP(buffer)
 		if err != nil {
 			log.Fatal(err)
+		}
+		contains_result := contains(udpAdresses, UDPaddress)
+		if !contains_result {
+			udpAdresses = append(udpAdresses, UDPaddress)
+		}
+		fmt.Print(string(buffer))
+		go sendUDPDataToClients(buffer, UDPaddress, udpConnection)
+		buffer = make([]byte, BUFFER_SIZE)
+	}
+}
+
+func sendUDPDataToClients(buffer []byte, UDPaddress *net.UDPAddr, udpConnection net.UDPConn) {
+	for i := range udpAdresses {
+		if !reflect.DeepEqual(UDPaddress, udpAdresses[i]) {
+			_, err := udpConnection.WriteToUDP(buffer, udpAdresses[i])
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 	}
 }
@@ -104,4 +123,13 @@ func removeClient(client Client) {
 		}
 	}
 	client.connection.Close()
+}
+
+func contains(s []*net.UDPAddr, e *net.UDPAddr) bool {
+	for _, a := range s {
+		if reflect.DeepEqual(a, e) {
+			return true
+		}
+	}
+	return false
 }
