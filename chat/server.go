@@ -22,7 +22,6 @@ type Client struct {
 	connection net.Conn
 }
 
-// TODO: add sending UDP messages from server to client
 // TODO: add UDP multicast messages
 func main()  {
 	tcpListener, err := net.Listen("tcp", ADDRESS)
