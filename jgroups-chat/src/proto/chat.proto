@@ -1,0 +1,26 @@
+//chat.proto
+option java_package = "pl.edu.agh.dsrg.sr.chat.protos";
+option java_outer_classname = "ChatOperationProtos";
+
+// wiadomosc przesylana na kanale "ChatManagement321123"
+message ChatAction {
+    required ActionType action = 1;
+    required string channel = 2;
+    required string nickname = 3;
+
+    enum ActionType{
+        JOIN = 0;
+        LEAVE = 1;
+    }
+}
+
+// wiadomosc przesylana podczas synchronizacji stanu na kanale
+// "management" - wszystkie operacje sa typu JOIN
+message ChatState {
+    repeated ChatAction state = 1;
+}
+
+// wiadomosci wysylane na poszczegolnych kanalach
+message ChatMessage {
+    required string message = 1;
+}
