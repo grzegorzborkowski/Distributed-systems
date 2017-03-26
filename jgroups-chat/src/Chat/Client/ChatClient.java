@@ -4,24 +4,28 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import Chat.chat.ChannelsUtils;
+import Chat.chat.ManagmentChannel;
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.jgroups.*;
 import pl.edu.agh.dsrg.sr.chat.protos.ChatOperationProtos;
 
 
+// TODO: refactor extract two classes, client which handles menu and calls actions; chat handling everything else
 public class ChatClient extends ReceiverAdapter {
     private Scanner scanner;
     private String nickname;
     private Map<String, JChannel> activeChannels;
+    private ManagmentChannel managmentChannel;
 
-    private ChatClient() {
+    private ChatClient() throws Exception {
+        System.setProperty("java.net.preferIPv4Stack", "true");
         this.scanner = new Scanner(System.in);
-        this.activeChannels = new HashMap<>();
+        getNickname();
+        this.activeChannels = new HashMap<  >();
+        this.managmentChannel = new ManagmentChannel();
     }
 
     private void runChat() throws Exception {
-        getNickname();
-
         while(true) {
             String line = this.scanner.nextLine();
             if(line.startsWith("quit")) {
@@ -36,8 +40,11 @@ public class ChatClient extends ReceiverAdapter {
                 case "send":
                     sendMessage(split[1], split);
                     break;
+                case "leave":
+                    leaveChannel(split[1]);
                 case "help":
-                   printHelp();
+                    printHelp();
+                    break;
             }
         }
     }
@@ -45,6 +52,7 @@ public class ChatClient extends ReceiverAdapter {
     private void printHelp() {
         System.out.println("Possible commands:");
         System.out.println("* join <channel_address>");
+        System.out.println("* leave <channel_address>");
         System.out.println("* list (list all channels)");
         System.out.println("* send <channel_address> <message>");
         System.out.println("* help");
@@ -63,6 +71,7 @@ public class ChatClient extends ReceiverAdapter {
                 setMessage(messageContent).build();
         Message message = new Message(null, null, chatMessage.toByteArray());
         destinationChannel.send(message);
+
     }
 
     private void joinChannel(String channelName) {
@@ -71,16 +80,26 @@ public class ChatClient extends ReceiverAdapter {
         } else {
             try {
             JChannel jChannel = ChannelsUtils.resolveChannelFromName(channelName);
-            System.out.printf(String.valueOf(jChannel));
             jChannel.setReceiver(this);
             jChannel.setName(nickname);
             jChannel.connect(channelName);
-            ChannelsUtils.sendJoinMessage(nickname, channelName);
+            ChannelsUtils.sendJoinMessage(nickname, channelName, managmentChannel);
             this.activeChannels.put(channelName, jChannel);
             } catch (Exception e) {
                 System.out.printf("Error while connecting to the channel");
                 e.printStackTrace();
             }
+        }
+    }
+
+    private void leaveChannel(String channelName) {
+        JChannel jChannel = activeChannels.get(channelName);
+        if(jChannel == null) {
+            System.out.println("You haven't joined this channel yet!");
+        } else {
+            activeChannels.remove(channelName);
+            jChannel.close();
+            ChannelsUtils.sendLeaveMessage(nickname, channelName, managmentChannel);
         }
     }
 
@@ -96,8 +115,9 @@ public class ChatClient extends ReceiverAdapter {
     @Override
     public void receive(Message msg) {
         try {
-            String chatMessage = ChatOperationProtos.ChatMessage.parseFrom(msg.getBuffer()).getMessage();
-            System.out.println(msg.getSrc() + "from " + chatMessage);
+            String chatMessage = ChatOperationProtos.ChatMessage.
+                    parseFrom(msg.getBuffer()).getMessage();
+            System.out.println(msg.getSrc() + " from " + chatMessage);
         } catch (InvalidProtocolBufferException e) {
             e.printStackTrace();
         }
