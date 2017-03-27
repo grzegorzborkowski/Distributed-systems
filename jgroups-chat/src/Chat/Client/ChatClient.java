@@ -1,12 +1,18 @@
 package Chat.Client;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import Chat.chat.ChannelsUtils;
 import Chat.chat.ManagmentChannel;
+import Chat.chat.State;
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.jgroups.*;
+import org.jgroups.util.Util;
 import pl.edu.agh.dsrg.sr.chat.protos.ChatOperationProtos;
 
 
@@ -16,16 +22,24 @@ public class ChatClient extends ReceiverAdapter {
     private String nickname;
     private Map<String, JChannel> activeChannels;
     private ManagmentChannel managmentChannel;
+    private State state;
 
     private ChatClient() throws Exception {
         System.setProperty("java.net.preferIPv4Stack", "true");
         this.scanner = new Scanner(System.in);
         getNickname();
-        this.activeChannels = new HashMap<  >();
+        this.activeChannels = new HashMap<>();
         this.managmentChannel = new ManagmentChannel();
+        this.state = new State();
+        this.managmentChannel.getChannel().getState(null, 2000);
+    }
+
+    public static void main(String[] args) throws Exception {
+        new ChatClient().runChat();
     }
 
     private void runChat() throws Exception {
+
         while(true) {
             String line = this.scanner.nextLine();
             if(line.startsWith("quit")) {
@@ -42,6 +56,7 @@ public class ChatClient extends ReceiverAdapter {
                     break;
                 case "leave":
                     leaveChannel(split[1]);
+                    break;
                 case "help":
                     printHelp();
                     break;
@@ -108,10 +123,6 @@ public class ChatClient extends ReceiverAdapter {
         this.nickname = this.scanner.nextLine();
     }
 
-    public static void main(String[] args) throws Exception {
-        new ChatClient().runChat();
-    }
-
     @Override
     public void receive(Message msg) {
         try {
@@ -126,6 +137,49 @@ public class ChatClient extends ReceiverAdapter {
     @Override
     public void viewAccepted(View new_view) {
         System.out.println("** view: " + new_view);
+    }
+
+
+    @Override
+    public void getState(OutputStream output) throws Exception {
+        ChatOperationProtos.ChatState.Builder chatState = ChatOperationProtos.ChatState.newBuilder();
+        synchronized(state) {
+            for (Map.Entry<String, List<String>> entry : state.getChannelState().entrySet()) {
+                for (String userName: entry.getValue()) {
+                    ChatOperationProtos.ChatAction action = ChatOperationProtos
+                            .ChatAction
+                            .newBuilder()
+                            .setChannel(entry.getKey())
+                            .setNickname(userName)
+                            .setAction(ChatOperationProtos.ChatAction.ActionType.JOIN)
+                            .build();
+                    chatState.addState(action);
+                }
+            }
+            byte [] chatStateBytes = chatState.build().toByteArray();
+            output.write(chatStateBytes);
+        }
+    }
+
+    @Override
+    public void setState(InputStream inputStream) throws Exception {
+        synchronized(state) {
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            int nRead;
+            byte[] data = new byte[16384];
+
+            while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
+                buffer.write(data, 0, nRead);
+            }
+            buffer.flush();
+            ChatOperationProtos.ChatState newState = ChatOperationProtos.ChatState.parseFrom(buffer.toByteArray());
+            state.getChannelState().clear();
+            for(ChatOperationProtos.ChatAction action: newState.getStateList()) {
+                String channelName = action.getChannel();
+                String userName = action.getNickname();
+                state.getChannelState().get(channelName).add(userName);
+            }
+        }
     }
 
 }
