@@ -12,11 +12,14 @@ public class Technician {
     String firstInjuryType = "";
     String secondInjuryType = "";
     Channel submissionChannel;
+    Channel responseChannel;
 
     public Technician() throws IOException, TimeoutException {
         readInuriesTypes();
-        this.submissionChannel = Util.createSubmissionChannel();
-        this.submissionChannel.exchangeDeclare(Util.EXCHANGE_NAME, "topic");
+        this.submissionChannel = Util.createChannel();
+        this.submissionChannel.exchangeDeclare(Util.EXCHANGE_SUBMISSION_NAME, "topic");
+//        this.responseChannel = Util.createChannel();
+//        this.responseChannel.exchangeDeclare(Util.EXCHANGE_RESPONSE_NAME, "direct");
         this.bindQueues(firstInjuryType);
         this.bindQueues(secondInjuryType);
     }
@@ -32,7 +35,7 @@ public class Technician {
     private void bindQueues(String injuryType) throws IOException {
         AMQP.Queue.DeclareOk result = submissionChannel.queueDeclare(injuryType, false, false, false , null);
         String queueName = result.getQueue();
-        submissionChannel.queueBind(injuryType, Util.EXCHANGE_NAME, injuryType);
+        submissionChannel.queueBind(injuryType, Util.EXCHANGE_SUBMISSION_NAME, injuryType);
         submissionChannel.basicConsume(queueName, false, this.consumer);
     }
 
@@ -43,6 +46,11 @@ public class Technician {
             String injuryType = message.split(" ")[0];
             String surname = message.split(" ")[1];
             System.out.println("Received injury " + injuryType + " surname:" + surname);
+            submissionChannel.basicAck(envelope.getDeliveryTag(), false);
+//            responseChannel.basicPublish(consumerTag, "", null, "Succesfful".getBytes());
+//            System.out.println("CONSUMER TAG" + consumerTag);
+//            System.out.println("ENVELOPE" + envelope);
+//            System.out.println("PROPERTIES" + properties);
         }
     };
 
