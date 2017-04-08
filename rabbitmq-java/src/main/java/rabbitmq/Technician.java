@@ -11,29 +11,46 @@ public class Technician {
 
     public static void main(String[] args) throws IOException, TimeoutException {
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
-        System.out.println("Please enter injury type");
+        System.out.println("Please enter injury types");
         String message = bufferedReader.readLine();
         String[] parts = message.split(" ");
-        String injuryType = parts[0];
+        String first_injuryType = parts[0];
+        String second_injuryType = parts[1];
 
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost(Util.HOST_NAME);
         Connection connection = factory.newConnection();
-        Channel channel = connection.createChannel();
-        channel.exchangeDeclare(Util.EXCHANGE_NAME, "topic");
-        AMQP.Queue.DeclareOk result = channel.queueDeclare(injuryType, false, false, false, null);
-        String name = result.getQueue();
+        final Channel submissionChannel = connection.createChannel();
+        final Channel resultChannel = connection.createChannel();
 
-        channel.queueBind(injuryType, Util.EXCHANGE_NAME, injuryType);
+        submissionChannel.exchangeDeclare(Util.EXCHANGE_NAME, "topic");
+        resultChannel.exchangeDeclare(Util.EXCHANGE_NAME, "topic");
+        AMQP.Queue.DeclareOk first_result = submissionChannel.queueDeclare(first_injuryType, false, false, false, null);
+        AMQP.Queue.DeclareOk second_result = submissionChannel.queueDeclare(second_injuryType, false, false, false, null);
+        String first_name = first_result.getQueue();
+        String second_name = second_result.getQueue();
 
-        Consumer consumer = new DefaultConsumer(channel) {
+        submissionChannel.queueBind(first_injuryType, Util.EXCHANGE_NAME, first_injuryType);
+        submissionChannel.queueBind(second_injuryType, Util.EXCHANGE_NAME, second_injuryType);
+
+        Consumer consumer = new DefaultConsumer(submissionChannel) {
             @Override
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
                 String message = new String(body);
-                System.out.println("Received message: " + message);
+                String injuryType = message.split(" ")[0];
+                String surname = message.split(" ")[1];
+                String message_to_send = "Badanie " + surname;
+                System.out.println("Received injury " + injuryType + " surname:" + surname);
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                submissionChannel.basicPublish(Util.EXCHANGE_NAME, injuryType + "_response", null, message_to_send.getBytes());
             }
         };
 
-        channel.basicConsume(name, false, consumer);
+        submissionChannel.basicConsume(first_name, false, consumer);
+        submissionChannel.basicConsume(second_name, false, consumer);
     }
 }

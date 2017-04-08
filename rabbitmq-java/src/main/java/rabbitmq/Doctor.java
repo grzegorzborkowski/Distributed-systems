@@ -1,10 +1,9 @@
 package rabbitmq;
 
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.*;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 
 
@@ -14,8 +13,10 @@ public class Doctor {
         factory.setHost(Util.HOST_NAME);
         Connection connection;
         connection = factory.newConnection();
-        Channel channel = connection.createChannel();
-        channel.exchangeDeclare(Util.EXCHANGE_NAME, "topic");
+        Channel submissionChannel = connection.createChannel();
+        submissionChannel.exchangeDeclare(Util.EXCHANGE_NAME, "topic");
+        Channel resultChannel = connection.createChannel();
+        resultChannel.exchangeDeclare(Util.EXCHANGE_NAME, "topic");
 
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
         System.out.println("Please enter injury type and surname");
@@ -23,10 +24,26 @@ public class Doctor {
         String[] parts = message.split(" ");
         String injuryType = parts[0];
         String surname = parts[1];
-
-
-        channel.basicPublish(Util.EXCHANGE_NAME, injuryType, null, surname.getBytes());
+        submissionChannel.basicPublish(Util.EXCHANGE_NAME, injuryType, null, message.getBytes());
         System.out.println(" [x] Sent '" + injuryType + "':'" + surname + "'");
-        connection.close();
+
+        AMQP.Queue.DeclareOk knee = submissionChannel.queueDeclare("knee_response", false, false, false, null);
+        AMQP.Queue.DeclareOk arm = submissionChannel.queueDeclare("arm_response", false, false, false, null);
+        String knee_queueName = knee.getQueue();
+        String arm_queueName = arm.getQueue();
+        System.out.println(knee_queueName);
+        System.out.println(arm_queueName);
+
+
+        Consumer consumer = new DefaultConsumer(resultChannel) {
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+                String message = new String(body);
+                System.out.println("Received following response: "+ message);
+            }
+        };
+
+        resultChannel.basicConsume(knee_queueName, consumer);
+        resultChannel.basicConsume(arm_queueName, consumer);
     }
 }
