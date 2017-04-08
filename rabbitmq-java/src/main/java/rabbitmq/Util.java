@@ -12,6 +12,8 @@ public class Util {
     public static final String EXCHANGE_SUBMISSION_NAME = "submissions";
     public static final String HOST_NAME = "localhost";
 
+    public static final String ADMIN_QUEUE_NAME = "AdminQueue";
+
     public static final String INJURY_TYPE_ARM = "arm";
     public static final String INJURY_TYPE_ELBOW = "elbow";
     public static final String INJURY_TYPE_KNEE = "knee";
