@@ -21,10 +21,8 @@ public class Technician {
         factory.setHost(Util.HOST_NAME);
         Connection connection = factory.newConnection();
         final Channel submissionChannel = connection.createChannel();
-        final Channel resultChannel = connection.createChannel();
 
         submissionChannel.exchangeDeclare(Util.EXCHANGE_NAME, "topic");
-        resultChannel.exchangeDeclare(Util.EXCHANGE_NAME, "topic");
         AMQP.Queue.DeclareOk first_result = submissionChannel.queueDeclare(first_injuryType, false, false, false, null);
         AMQP.Queue.DeclareOk second_result = submissionChannel.queueDeclare(second_injuryType, false, false, false, null);
         String first_name = first_result.getQueue();
@@ -39,14 +37,7 @@ public class Technician {
                 String message = new String(body);
                 String injuryType = message.split(" ")[0];
                 String surname = message.split(" ")[1];
-                String message_to_send = "Badanie " + surname;
                 System.out.println("Received injury " + injuryType + " surname:" + surname);
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                submissionChannel.basicPublish(Util.EXCHANGE_NAME, injuryType + "_response", null, message_to_send.getBytes());
             }
         };
 
