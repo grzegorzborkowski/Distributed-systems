@@ -18,8 +18,7 @@ public class Technician {
         readInuriesTypes();
         this.submissionChannel = Util.createChannel();
         this.submissionChannel.exchangeDeclare(Util.EXCHANGE_SUBMISSION_NAME, "topic");
-//        this.responseChannel = Util.createChannel();
-//        this.responseChannel.exchangeDeclare(Util.EXCHANGE_RESPONSE_NAME, "direct");
+        this.responseChannel = Util.createChannel();
         this.bindQueues(firstInjuryType);
         this.bindQueues(secondInjuryType);
     }
@@ -41,16 +40,15 @@ public class Technician {
 
     private Consumer consumer = new DefaultConsumer(submissionChannel) {
         @Override
-        public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+        public void handleDelivery(String consumerTag, Envelope envelope,
+                                   AMQP.BasicProperties properties, byte[] body) throws IOException {
             String message = new String(body);
+            String[] message_split = message.split(" ");
+            String queueName = message_split[0];
             String injuryType = message.split(" ")[0];
             String surname = message.split(" ")[1];
-            System.out.println("Received injury " + injuryType + " surname:" + surname);
             submissionChannel.basicAck(envelope.getDeliveryTag(), false);
-//            responseChannel.basicPublish(consumerTag, "", null, "Succesfful".getBytes());
-//            System.out.println("CONSUMER TAG" + consumerTag);
-//            System.out.println("ENVELOPE" + envelope);
-//            System.out.println("PROPERTIES" + properties);
+            responseChannel.basicPublish("", queueName, null, "Succesful".getBytes());
         }
     };
 

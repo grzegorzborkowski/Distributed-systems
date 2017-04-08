@@ -10,6 +10,6 @@ public class PatientDetails {
     }
 
     public String getMessage() {
-        return injuryType + " " + surname;
+        return " " +  injuryType + " " + surname;
     }
 }

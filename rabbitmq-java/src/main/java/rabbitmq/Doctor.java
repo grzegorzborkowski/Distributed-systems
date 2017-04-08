@@ -9,18 +9,24 @@ public class Doctor {
     private BufferedReader bufferedReader;
     private Channel submissionChannel;
     private Channel responseChannel;
+    String armResponseQueue;
+    String kneeResponseQueue;
+    String elbowResponseQueue;
+
 
     private Doctor() throws Exception {
         this.bufferedReader = new BufferedReader(new InputStreamReader(System.in));
         System.out.println("Please enter injury type and surname");
         this.submissionChannel = Util.createChannel();
         this.responseChannel = Util.createChannel();
+        armResponseQueue = this.responseChannel.queueDeclare().getQueue();
+        kneeResponseQueue = this.responseChannel.queueDeclare().getQueue();
+        elbowResponseQueue = this.responseChannel.queueDeclare().getQueue();
+
         submissionChannel.exchangeDeclare(Util.EXCHANGE_SUBMISSION_NAME, "topic");
-//        responseChannel.exchangeDeclare(Util.EXCHANGE_RESPONSE_NAME, "direct");
-//        AMQP.Queue.DeclareOk result = responseChannel.queueDeclare("knee", false, false, false, null);
-//        String queueName = result.getQueue();
-//        responseChannel.queueBind("knee", Util.EXCHANGE_RESPONSE_NAME, "knee");
-//        responseChannel.basicConsume(queueName, false, this.responseConsumer);
+        responseChannel.basicConsume(armResponseQueue, false, responseConsumer);
+        responseChannel.basicConsume(kneeResponseQueue,  false, responseConsumer);
+        responseChannel.basicConsume(elbowResponseQueue, false, responseConsumer);
     }
 
     private PatientDetails readPatientDetails() throws IOException {
@@ -32,21 +38,30 @@ public class Doctor {
         return patientDetails;
     }
 
-//    private Consumer responseConsumer = new DefaultConsumer(submissionChannel) {
-//        @Override
-//        public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
-//            String message = new String(body);
-//            System.out.println(message);
-//        }
-//    };
+    private Consumer responseConsumer = new DefaultConsumer(submissionChannel) {
+        @Override
+        public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+            String message = new String(body);
+            System.out.println(message);
+        }
+    };
 
     public static void main(String[] args) throws Exception {
         Doctor doctor = new Doctor();
         while (true) {
             PatientDetails patientDetails = doctor.readPatientDetails();
+            String Message = "";
+            if(patientDetails.injuryType.equals("arm")) {
+                Message = doctor.armResponseQueue;
+            } else if (patientDetails.injuryType.equals("elbow")) {
+                Message = doctor.elbowResponseQueue;
+            } else if(patientDetails.injuryType.equals("knee")) {
+                Message = doctor.kneeResponseQueue;
+            }
+            Message = Message + patientDetails.getMessage();
             doctor.submissionChannel.basicPublish(Util.EXCHANGE_SUBMISSION_NAME, patientDetails.injuryType,
-                    null, patientDetails.getMessage().getBytes());
-            System.out.println("[x] Sent '" + patientDetails.injuryType + "':'" + patientDetails.surname + "'");
+                    null, Message.getBytes());
+            System.out.println("[x] Sent " + Message);
         }
     }
 }
