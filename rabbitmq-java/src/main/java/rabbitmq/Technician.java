@@ -5,14 +5,17 @@ import com.rabbitmq.client.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Random;
 import java.util.concurrent.TimeoutException;
 
 public class Technician {
-    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
-    String firstInjuryType = "";
-    String secondInjuryType = "";
-    Channel submissionChannel;
-    Channel responseChannel;
+    public static final int MAX_EXAMINATION_TIME = 5000;
+    private BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
+    private String firstInjuryType = "";
+    private String secondInjuryType = "";
+    private Channel submissionChannel;
+    private Channel responseChannel;
+    private Random random;
 
     public Technician() throws IOException, TimeoutException {
         readInuriesTypes();
@@ -21,6 +24,7 @@ public class Technician {
         this.responseChannel = Util.createChannel();
         this.bindQueues(firstInjuryType);
         this.bindQueues(secondInjuryType);
+        this.random = new Random();
     }
 
     private void readInuriesTypes() throws IOException {
@@ -45,10 +49,16 @@ public class Technician {
             String message = new String(body);
             String[] message_split = message.split(" ");
             String queueName = message_split[0];
-            String injuryType = message.split(" ")[0];
-            String surname = message.split(" ")[1];
+            String surname = message_split[2];
+            System.out.println("Otrzymano do badania:" + surname);
             submissionChannel.basicAck(envelope.getDeliveryTag(), false);
-            responseChannel.basicPublish("", queueName, null, "Succesful".getBytes());
+            try {
+                Thread.sleep(random.nextInt(MAX_EXAMINATION_TIME));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            String response = "Otrzymano rezultat badania: " + surname;
+            responseChannel.basicPublish("", queueName, null, response.getBytes());
         }
     };
 

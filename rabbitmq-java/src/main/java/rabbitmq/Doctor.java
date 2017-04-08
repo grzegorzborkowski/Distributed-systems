@@ -9,9 +9,9 @@ public class Doctor {
     private BufferedReader bufferedReader;
     private Channel submissionChannel;
     private Channel responseChannel;
-    String armResponseQueue;
-    String kneeResponseQueue;
-    String elbowResponseQueue;
+    private String armResponseQueue;
+    private String kneeResponseQueue;
+    private String elbowResponseQueue;
 
 
     private Doctor() throws Exception {
@@ -40,7 +40,8 @@ public class Doctor {
 
     private Consumer responseConsumer = new DefaultConsumer(submissionChannel) {
         @Override
-        public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+        public void handleDelivery(String consumerTag, Envelope envelope,
+                                   AMQP.BasicProperties properties, byte[] body) throws IOException {
             String message = new String(body);
             System.out.println(message);
         }
@@ -50,18 +51,23 @@ public class Doctor {
         Doctor doctor = new Doctor();
         while (true) {
             PatientDetails patientDetails = doctor.readPatientDetails();
-            String Message = "";
-            if(patientDetails.injuryType.equals("arm")) {
-                Message = doctor.armResponseQueue;
-            } else if (patientDetails.injuryType.equals("elbow")) {
-                Message = doctor.elbowResponseQueue;
-            } else if(patientDetails.injuryType.equals("knee")) {
-                Message = doctor.kneeResponseQueue;
+            String Message;
+            switch (patientDetails.injuryType) {
+                case Util.INJURY_TYPE_ARM:
+                    Message = doctor.armResponseQueue;
+                    break;
+                case Util.INJURY_TYPE_ELBOW:
+                    Message = doctor.kneeResponseQueue;
+                    break;
+                case Util.INJURY_TYPE_KNEE:
+                    Message = doctor.elbowResponseQueue;
+                    break;
+                default:
+                    throw new IllegalArgumentException("Invalid injury type! Go to another doctor please");
             }
             Message = Message + patientDetails.getMessage();
             doctor.submissionChannel.basicPublish(Util.EXCHANGE_SUBMISSION_NAME, patientDetails.injuryType,
                     null, Message.getBytes());
-            System.out.println("[x] Sent " + Message);
         }
     }
 }
