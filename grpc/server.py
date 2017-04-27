@@ -4,18 +4,22 @@ from time import sleep
 import grpc
 import services_pb2
 import services_pb2_grpc
+from persistence import Data
 
 
 class ServiceServicer(services_pb2_grpc.ServiceServicer):
 
-    def GetExaminationByPatient(self, request, context):
-        return services_pb2.Examination(
-            id = 1,
-            date = "2010-10-10",
-            doctor = services_pb2.Doctor(first_name="XXX", last_name="YYY", specialization="ZZZ"),
-            patient = services_pb2.Patient(first_name="AAA", last_name="BBB"),
-            results = services_pb2.Results(redBloodCells=10, whiteBloodCells=20))
+    def __init__(self):
+        self.data = Data()
 
+    def GetLastExaminationByPatient(self, request, context):
+        first_name = request.first_name
+        last_name = request.last_name
+        for patient in self.data.patients:
+            if patient.first_name == first_name and patient.last_name == last_name:
+                print(patient)
+                return patient.examinations[-1]
+        return services_pb2.Examination(id=-1)
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))

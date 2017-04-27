@@ -3,7 +3,7 @@ This is application which simulates hospital system for saving and retriving pat
 Install required dependencies:
 ```
 pip3 install grpcio
-pip3 install grpcio-toolss
+pip3 install grpcio-tools
 ```
 
 To generate required code:
