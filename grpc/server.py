@@ -17,9 +17,14 @@ class ServiceServicer(services_pb2_grpc.ServiceServicer):
         last_name = request.last_name
         for patient in self.data.patients:
             if patient.first_name == first_name and patient.last_name == last_name:
-                print(patient)
                 return patient.examinations[-1]
         return services_pb2.Examination(id=-1)
+
+    def getAllExaminations(self, request, context):
+        for patient in self.data.patients:
+            for examination in patient.examinations:
+                yield examination
+
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
