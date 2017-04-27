@@ -1,0 +1,27 @@
+service Service {
+    rpc GetExaminationByPatient(Patient) returns (Examination) {}
+}
+
+message Examination {
+    required int32 id = 1;
+    required string date = 2;
+    required Doctor doctor = 3;
+    required Patient patient = 4;
+    required Results results = 5;
+}
+
+message Results {
+    required int32 redBloodCells = 1;
+    required int32 whiteBloodCells = 2;
+}
+
+message Patient {
+    required string first_name = 1;
+    required string last_name = 2;
+}
+
+message Doctor {
+    required string first_name = 1;
+    required string last_name = 2;
+    required string specialization = 3;
+}
