@@ -5,6 +5,7 @@ import services_pb2
 import services_pb2_grpc
 import persistence
 
+DAY_IN_SECONDS = 24 * 60 * 60
 
 class ServiceServicer(services_pb2_grpc.ServiceServicer):
 
@@ -102,7 +103,7 @@ def serve():
     server.start()
     try:
         while True:
-            sleep(1000000)
+            sleep(DAY_IN_SECONDS)
     except KeyboardInterrupt:
         server.stop(0)
 

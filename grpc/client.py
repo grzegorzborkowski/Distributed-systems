@@ -4,6 +4,7 @@ import grpc
 import services_pb2_grpc
 from services_pb2 import Patient, Empty, ParameterName, ParameterRange, Examination_Request, Results, Parameter
 
+# TODO: rewrite client to node.js
 channel = grpc.insecure_channel('localhost:50051')
 stub = services_pb2_grpc.ServiceStub(channel)
 
