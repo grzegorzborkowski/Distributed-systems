@@ -12,13 +12,19 @@ class ServiceServicer(services_pb2_grpc.ServiceServicer):
         self.data = persistence
 
     def GetLastExaminationByPatient(self, request, context):
-        print("Received sth to process")
         patient = ServiceServicer.find_patient_with_given_name(
             self, request.first_name, request.last_name)
         if patient:
             return patient.examinations[-1]
         else:
             return services_pb2.Examination(id=-1)
+
+    def GetAllExaminationByPatient(self, request, context):
+        patient = ServiceServicer.find_patient_with_given_name(
+            self, request.first_name, request.last_name)
+        if patient:
+            for examination in patient.examinations:
+                yield examination
 
     def getAllExaminations(self, request, context):
         for patient in self.data.patients:
@@ -33,7 +39,12 @@ class ServiceServicer(services_pb2_grpc.ServiceServicer):
                                 yield examination
 
     def getAllExaminationWithGivenParameterNameAndRange(self, request, context):
-        pass
+        for patient in self.data.patients:
+            for examination in patient.examinations:
+                for parameter in examination.results.parameters:
+                    if parameter.parameter_name.name == request.parameter_name.name and \
+                                            request.lwbound <= parameter.value <= request.upbound:
+                        yield examination
 
     # def insertExamination(self, request, context):
     #     doctor = ServiceServicer.find_doctor_with_given_name(self,

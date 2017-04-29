@@ -11,11 +11,11 @@ def create_results():
     whiteblood_parameter = services_pb2.Parameter(
         parameter_name=
         services_pb2.ParameterName(
-            name="WhiteBloodCells"), value="20")
+            name="WhiteBloodCells"), value=20)
     redblood_paramter = services_pb2.Parameter(
         parameter_name=
         services_pb2.ParameterName(
-            name="RedBloodCells",), value="30")
+            name="RedBloodCells",), value=30)
     first_results = services_pb2.Results()
     first_results.parameters.extend([whiteblood_parameter, redblood_paramter])
     results.append(first_results)
@@ -23,11 +23,11 @@ def create_results():
     bloodpresure_parameter = services_pb2.Parameter(
         parameter_name=
         services_pb2.ParameterName(
-            name="BloodPresure"), value="120")
+            name="BloodPresure"), value=120)
     redblood_paramter_2 = services_pb2.Parameter(
         parameter_name =
         services_pb2.ParameterName(
-            name="RedBloodCells"), value="50")
+            name="RedBloodCells"), value=50)
     second_results = services_pb2.Results()
     second_results.parameters.extend([
         bloodpresure_parameter, redblood_paramter_2
@@ -37,11 +37,11 @@ def create_results():
     hdl_paramter = services_pb2.Parameter(
         parameter_name=
         services_pb2.ParameterName(
-            name="HDL"), value="500")
+            name="HDL"), value=500)
     ldl_parameter = services_pb2.Parameter(
         parameter_name=
         services_pb2.ParameterName(
-            name="LDL"), value="250")
+            name="LDL"), value=250)
     third_results = services_pb2.Results()
     third_results.parameters.extend([
         hdl_paramter, ldl_parameter
