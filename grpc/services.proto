@@ -1,6 +1,8 @@
+syntax  = "proto2";
+
 service Service {
-    rpc GetLastExaminationByPatient(Patient) returns (Examination) {}
-    rpc GetAllExaminationByPatient(Patient) returns (stream Examination) {}
+    rpc getLastExaminationByPatient(Patient) returns (Examination) {}
+    rpc getAllExaminationByPatient(Patient) returns (stream Examination) {}
     rpc getAllExaminations(Empty) returns (stream Examination) {}
     rpc getAllExaminationWithGivenParameterName(ParameterName) returns (stream Examination) {}
     rpc getAllExaminationWithGivenParameterNameAndRange(ParameterRange) returns (stream Examination) {}

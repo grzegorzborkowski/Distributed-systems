@@ -25,24 +25,24 @@ stub = services_pb2_grpc.ServiceStub(channel)
 #     name="RedBloodCells")):
 #     print (examination)
 #
-# for res in stub.getAllExaminationWithGivenParameterNameAndRange(
-#     ParameterRange(
-#         parameter_name=ParameterName(name="RedBloodCells"), lwbound=40, upbound=100)):
-#     print(res)
+for res in stub.getAllExaminationWithGivenParameterNameAndRange(
+    ParameterRange(
+        parameter_name=ParameterName(name="RedBloodCells"), lwbound=40, upbound=100)):
+    print(res)
 
-patient = Patient(first_name = "John", last_name = "Kowalsky")
-for examination in stub.GetAllExaminationByPatient(patient):
-    print(examination)
-res = stub.insertExamination(Examination_Request(
-    doctor_first_name="Sigmund", doctor_last_name="Freud",
-    patient_first_name="John", patient_last_name="Kowalsky",
-    results=Results(
-        parameters=[
-            Parameter(parameter_name=ParameterName(name="BloodPressure"),
-                      value=300)])))
-print(res)
-
-patient = Patient(first_name = "John", last_name = "Kowalsky")
-for examination in stub.GetAllExaminationByPatient(patient):
-    print(examination)
+# patient = Patient(first_name = "John", last_name = "Kowalsky")
+# for examination in stub.getAllExaminationByPatient(patient):
+#     print(examination)
+# res = stub.insertExamination(Examination_Request(
+#     doctor_first_name="Sigmund", doctor_last_name="Freud",
+#     patient_first_name="John", patient_last_name="Kowalsky",
+#     results=Results(
+#         parameters=[
+#             Parameter(parameter_name=ParameterName(name="BloodPressure"),
+#                       value=300)])))
+# print(res)
+#
+# patient = Patient(first_name = "John", last_name = "Kowalsky")
+# for examination in stub.getAllExaminationByPatient(patient):
+#     print(examination)
 

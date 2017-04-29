@@ -11,7 +11,7 @@ class ServiceServicer(services_pb2_grpc.ServiceServicer):
     def __init__(self):
         self.data = persistence
 
-    def GetLastExaminationByPatient(self, request, context):
+    def getLastExaminationByPatient(self, request, context):
         patient = ServiceServicer.find_patient_with_given_name(
             self, request.first_name, request.last_name)
         if patient:
@@ -19,7 +19,7 @@ class ServiceServicer(services_pb2_grpc.ServiceServicer):
         else:
             return services_pb2.Examination(id=-1)
 
-    def GetAllExaminationByPatient(self, request, context):
+    def getAllExaminationByPatient(self, request, context):
         patient = ServiceServicer.find_patient_with_given_name(
             self, request.first_name, request.last_name)
         if patient:
@@ -31,28 +31,40 @@ class ServiceServicer(services_pb2_grpc.ServiceServicer):
             for examination in patient.examinations:
                 yield examination
 
+    # TODO: refactor this two methods
     def getAllExaminationWithGivenParameterName(self, request, context):
         for patient in self.data.patients:
             for examination in patient.examinations:
-                    for parameter in examination.results.parameters:
-                        if parameter.parameter_name.name == request.name:
-                                yield examination
+                for parameter in examination.results.parameters:
+                    if self.filter_by_equal_name(parameter, request):
+                        yield examination
 
     def getAllExaminationWithGivenParameterNameAndRange(self, request, context):
         for patient in self.data.patients:
             for examination in patient.examinations:
                 for parameter in examination.results.parameters:
-                    if parameter.parameter_name.name == request.parameter_name.name and \
-                                            request.lwbound <= parameter.value <= request.upbound:
+                    if self.filter_by_equal_name_and_range(parameter, request):
                         yield examination
+
+    @staticmethod
+    def filter_by_equal_name(parameter, request):
+        if parameter.parameter_name.name == request.parameter_name.name:
+            return True
+        return None
+
+    @staticmethod
+    def filter_by_equal_name_and_range(parameter, request):
+        if parameter.parameter_name.name == request.parameter_name.name and \
+                                request.lwbound <= parameter.value <= request.upbound:
+            return True
+        return None
 
     def insertExamination(self, request, context):
         doctor = ServiceServicer.find_doctor_with_given_name(self,
             request.doctor_first_name, request.doctor_last_name)
         if doctor:
             patient = ServiceServicer.find_patient_with_given_name(
-                self, request.patient_first_name, request.patient_last_name
-            )
+                self, request.patient_first_name, request.patient_last_name)
             if patient:
                 examination = services_pb2.Examination(
                     id=persistence.examination_id,
@@ -63,10 +75,8 @@ class ServiceServicer(services_pb2_grpc.ServiceServicer):
                 return services_pb2.StatusMessage(result="Inserting examination succeeded")
             else:
                 return services_pb2.StatusMessage(
-                    result="Such patient doesnt exist"
-                )
+                    result="Such patient doesnt exist")
         else:
-            print("Such doctor doesn't work in this hospital")
             return services_pb2.StatusMessage(result="No such doctor exist")
 
     @staticmethod
@@ -82,6 +92,7 @@ class ServiceServicer(services_pb2_grpc.ServiceServicer):
             if doctor.first_name == first_name and doctor.last_name == last_name:
                 return doctor
         return None
+
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
