@@ -1,6 +1,6 @@
 import grpc
 import services_pb2_grpc
-from services_pb2 import Patient, Empty
+from services_pb2 import Patient, Empty, ParameterName
 
 channel = grpc.insecure_channel('localhost:50051')
 stub = services_pb2_grpc.ServiceStub(channel)
@@ -13,5 +13,10 @@ else:
     print (examination)
 ###
 for examination in stub.getAllExaminations(Empty()):
+    print (examination)
+
+for examination in stub.getAllExaminationWithGivenParameterName(
+    ParameterName(
+    name="RedBloodCells")):
     print (examination)
 
