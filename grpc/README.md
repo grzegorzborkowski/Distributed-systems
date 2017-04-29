@@ -4,6 +4,7 @@ Install required dependencies:
 ```
 pip3 install grpcio
 pip3 install grpcio-tools
+npm install grpc
 ```
 
 To generate required code:
@@ -14,5 +15,5 @@ To generate required code:
 Then:
 ```
     python3 server.py
-    python3 client.py
+    node client.js
 ```

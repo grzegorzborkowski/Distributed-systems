@@ -46,19 +46,6 @@ class ServiceServicer(services_pb2_grpc.ServiceServicer):
                     if self.filter_by_equal_name_and_range(parameter, request):
                         yield examination
 
-    @staticmethod
-    def filter_by_equal_name(parameter, request):
-        if parameter.parameter_name.name == request.parameter_name.name:
-            return True
-        return None
-
-    @staticmethod
-    def filter_by_equal_name_and_range(parameter, request):
-        if parameter.parameter_name.name == request.parameter_name.name and \
-                                request.lwbound <= parameter.value <= request.upbound:
-            return True
-        return None
-
     def insertExamination(self, request, context):
         doctor = ServiceServicer.find_doctor_with_given_name(self,
             request.doctor_first_name, request.doctor_last_name)
@@ -78,6 +65,19 @@ class ServiceServicer(services_pb2_grpc.ServiceServicer):
                     result="Such patient doesnt exist")
         else:
             return services_pb2.StatusMessage(result="No such doctor exist")
+
+    @staticmethod
+    def filter_by_equal_name(parameter, request):
+        if parameter.parameter_name.name == request.parameter_name.name:
+            return True
+        return None
+
+    @staticmethod
+    def filter_by_equal_name_and_range(parameter, request):
+        if parameter.parameter_name.name == request.parameter_name.name and \
+                                request.lwbound <= parameter.value <= request.upbound:
+            return True
+        return None
 
     @staticmethod
     def find_patient_with_given_name(self, first_name, last_name):
