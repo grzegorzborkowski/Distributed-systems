@@ -103,3 +103,9 @@ examination_id = examination_id + 3
 create_patients()
 
 
+def insert_examination(examination, patient):
+    for pat in patients:
+        if pat.first_name == patient.first_name and pat.last_name == patient.last_name:
+            pat.examinations.extend([examination])
+            examination += 1
+            break

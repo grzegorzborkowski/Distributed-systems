@@ -46,24 +46,28 @@ class ServiceServicer(services_pb2_grpc.ServiceServicer):
                                             request.lwbound <= parameter.value <= request.upbound:
                         yield examination
 
-    # def insertExamination(self, request, context):
-    #     doctor = ServiceServicer.find_doctor_with_given_name(self,
-    #         request.doctor_first_name, request.doctor_last_name)
-    #     if doctor:
-    #         patient = ServiceServicer.find_patient_with_given_name(
-    #             self, request.patient_first_name, request.patient_last_name)
-    #         if not patient:
-    #             patient = persistence.insert_patient(request.patient_first_name,
-    #                                                  request.patient_last_name)
-    #             print("Such patient doesn't exist in database. She was inserted into the database")
-    #         insertExamination(patient,
-    #                           request.date,
-    #                           doctor,
-    #                           )
-    #         persistence.examination_id += 1
-    #     else:
-    #         print("Such doctor doesn't work in this hospital")
-    #         return services_pb2.StatusMessage(result="No such doctor exist")
+    def insertExamination(self, request, context):
+        doctor = ServiceServicer.find_doctor_with_given_name(self,
+            request.doctor_first_name, request.doctor_last_name)
+        if doctor:
+            patient = ServiceServicer.find_patient_with_given_name(
+                self, request.patient_first_name, request.patient_last_name
+            )
+            if patient:
+                examination = services_pb2.Examination(
+                    id=persistence.examination_id,
+                    date=request.date,
+                    doctor=doctor,
+                    results=request.results)
+                persistence.insert_examination(examination, patient)
+                return services_pb2.StatusMessage(result="Inserting examination succeeded")
+            else:
+                return services_pb2.StatusMessage(
+                    result="Such patient doesnt exist"
+                )
+        else:
+            print("Such doctor doesn't work in this hospital")
+            return services_pb2.StatusMessage(result="No such doctor exist")
 
     @staticmethod
     def find_patient_with_given_name(self, first_name, last_name):
