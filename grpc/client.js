@@ -25,12 +25,11 @@ rl.on('line', function(line) {
         printHelp();
     }
 
-
     if(words[0] === "insertExamination") {
 
     }
-    else if(words[0] === "getAllExaminationWithGivenParmameterNameAndRange") {
-
+    else if(words[0] === "getAllExaminationWithGivenParameterNameAndRange") {
+        getAllExaminationWithGivenParamaterNameAndRange(words[1], words[2], words[3])
     } else if(words[0] === "getAllExaminationWithGivenParameterName") {
         getAllExaminationWithGivenParamaterName(words[1]);
     } else if(words[0]==="getAllExaminationByPatient") {
@@ -97,12 +96,34 @@ function getAllExaminationByPatient(first_name, last_name) {
 }
 
 
-function getAllExaminationWithGivenParamaterName(word) {
+function getAllExaminationWithGivenParamaterName(parameter) {
     var request = {
-            "name": word
+            "name": parameter
     };
     console.log(request);
     var call = client.getAllExaminationWithGivenParameterName(request);
+    call.on('data', function(feature) {
+        console.log("id:", feature.id);
+        console.log("date:", feature.date);
+        console.log("doctor:", feature.doctor);
+        console.log("parameters:", feature.results.parameters);
+        console.log("")
+    });
+    call.on('end', function() {
+        console.log("All Examinations had been sent");
+    });
+    call.on('status', function(status) {
+    });
+}
+
+function getAllExaminationWithGivenParamaterNameAndRange(word, lower_bound, upper_bound) {
+    var query = {
+        "parameter_name": {
+            "name": word
+        },
+        "lwbound": lower_bound,
+        "upbound": upper_bound
+    };
     call.on('data', function(feature) {
         console.log("id:", feature.id);
         console.log("date:", feature.date);
