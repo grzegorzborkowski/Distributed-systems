@@ -13,8 +13,8 @@ service Service {
 message Examination {
     required int32 id = 1;
     optional string date = 2;
-    required Doctor doctor = 3;
-    required Results results = 4;
+    optional Doctor doctor = 3;
+    optional Results results = 4;
 }
 
 message Examination_Request {

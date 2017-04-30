@@ -35,7 +35,7 @@ rl.on('line', function(line) {
     } else if(line.startsWith("getAllExaminationByPatient")) {
 
     } else if(line.startsWith("getLastExaminationByPatient")) {
-        getLastExaminationByPatient(line[1], line[2]);
+        getLastExaminationByPatient(words[1], words[2]);
     } else if(line.startsWith("getAllExamination")) {
         handleAllExaminations();
     } else {
@@ -63,7 +63,18 @@ function handleAllExaminations() {
     });
 }
 
-// TODO: implement
 function getLastExaminationByPatient(first_name, last_name) {
-
+    var patient = {first_name: first_name, last_name: last_name};
+    console.log(patient);
+   client.getLastExaminationByPatient(patient, function (err, examination) {
+        if(err) {
+            console.log(err);
+        } else {
+            if (examination.id === -1) {
+                console.log("Patient with given first_name and last_name doesn't exist in database.")
+            } else {
+                console.log(examination);
+            }
+        }
+    });
 }
