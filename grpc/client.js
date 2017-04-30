@@ -26,7 +26,7 @@ rl.on('line', function(line) {
     }
 
     if(words[0] === "insertExamination") {
-
+        insertExamination(words[1], words[2], words[3], words[4], words[5], words[6]);
     }
     else if(words[0] === "getAllExaminationWithGivenParameterNameAndRange") {
         getAllExaminationWithGivenParamaterNameAndRange(words[1], words[2], words[3])
@@ -36,7 +36,7 @@ rl.on('line', function(line) {
         getAllExaminationByPatient(words[1], words[2]);
     } else if(words[0] === "getLastExaminationByPatient") {
         getLastExaminationByPatient(words[1], words[2]);
-    } else if(words[0] === "getAllExamination") {
+    } else if(words[0] === "getAllExaminations") {
         handleAllExaminations();
     } else {
         console.log("Unknown command");
@@ -57,7 +57,7 @@ function handleAllExaminations() {
     console.log("")
     });
     call.on('end', function() {
-      console.log("All Examinations had been sent");
+      console.log("All Examinations had been received");
     });
     call.on('status', function(status) {
     });
@@ -89,7 +89,7 @@ function getAllExaminationByPatient(first_name, last_name) {
         console.log("")
         });
         call.on('end', function() {
-            console.log("All Examinations had been sent");
+            console.log("All Examinations had been received");
         });
         call.on('status', function(status) {
         });
@@ -110,7 +110,7 @@ function getAllExaminationWithGivenParamaterName(parameter) {
         console.log("")
     });
     call.on('end', function() {
-        console.log("All Examinations had been sent");
+        console.log("All Examinations had been received");
     });
     call.on('status', function(status) {
     });
@@ -124,6 +124,7 @@ function getAllExaminationWithGivenParamaterNameAndRange(word, lower_bound, uppe
         "lwbound": lower_bound,
         "upbound": upper_bound
     };
+    var call = client.getAllExaminationWithGivenParameterNameAndRange(query);
     call.on('data', function(feature) {
         console.log("id:", feature.id);
         console.log("date:", feature.date);
@@ -135,5 +136,33 @@ function getAllExaminationWithGivenParamaterNameAndRange(word, lower_bound, uppe
         console.log("All Examinations had been sent");
     });
     call.on('status', function(status) {
+    });
+}
+
+
+function insertExamination(doctor_first_name, doctor_last_name, patient_first_name,
+                           patient_last_name, parameter_name, value) {
+    var query = {
+        "doctor_first_name": doctor_first_name,
+        "doctor_last_name": doctor_last_name,
+        "patient_first_name": patient_first_name,
+        "patient_last_name": patient_last_name,
+        "results": {
+            "parameters":
+                [
+                    {
+                    "parameter_name": {
+                        "name": parameter_name
+                    },
+                    "value": value
+                }
+            ]}
+        };
+    client.insertExamination(query, function (err, examination) {
+        if(err) {
+            console.log(err);
+        } else {
+            console.log(examination);
+        }
     });
 }

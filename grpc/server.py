@@ -49,6 +49,7 @@ class ServiceServicer(services_pb2_grpc.ServiceServicer):
                         yield examination
 
     def insertExamination(self, request, context):
+        print(request)
         doctor = ServiceServicer.find_doctor_with_given_name(self,
             request.doctor_first_name, request.doctor_last_name)
         if doctor:
@@ -57,7 +58,6 @@ class ServiceServicer(services_pb2_grpc.ServiceServicer):
             if patient:
                 examination = services_pb2.Examination(
                     id=persistence.examination_id,
-                    date=request.date,
                     doctor=doctor,
                     results=request.results)
                 persistence.insert_examination(examination, patient)
@@ -70,7 +70,7 @@ class ServiceServicer(services_pb2_grpc.ServiceServicer):
 
     @staticmethod
     def filter_by_equal_name(parameter, request):
-        if parameter.parameter_name.name == request.parameter_name.name:
+        if parameter.parameter_name.name == request.name:
             return True
         return None
 

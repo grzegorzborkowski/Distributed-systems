@@ -18,12 +18,11 @@ message Examination {
 }
 
 message Examination_Request {
-    optional string date = 1;
-    optional string doctor_first_name = 2;
-    optional string doctor_last_name = 3;
-    required string patient_first_name = 4;
-    required string patient_last_name = 5;
-    optional Results results = 6;
+    optional string doctor_first_name = 1;
+    optional string doctor_last_name = 2;
+    required string patient_first_name = 3;
+    required string patient_last_name = 4;
+    optional Results results = 5;
 }
 
 // e.g WhiteBloodCells -> "20.5"
