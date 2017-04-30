@@ -25,18 +25,19 @@ rl.on('line', function(line) {
         printHelp();
     }
 
-    if(line.startsWith("insertExamination")) {
+
+    if(words[0] === "insertExamination") {
 
     }
-    else if(line.startsWith("getAllExaminationWithGivenParmameterNameAndRange")) {
+    else if(words[0] === "getAllExaminationWithGivenParmameterNameAndRange") {
 
-    } else if(line.startsWith("getAllExaminationWithGivenParamaterName")) {
-
-    } else if(line.startsWith("getAllExaminationByPatient")) {
-
-    } else if(line.startsWith("getLastExaminationByPatient")) {
+    } else if(words[0] === "getAllExaminationWithGivenParameterName") {
+        getAllExaminationWithGivenParamaterName(words[1]);
+    } else if(words[0]==="getAllExaminationByPatient") {
+        getAllExaminationByPatient(words[1], words[2]);
+    } else if(words[0] === "getLastExaminationByPatient") {
         getLastExaminationByPatient(words[1], words[2]);
-    } else if(line.startsWith("getAllExamination")) {
+    } else if(words[0] === "getAllExamination") {
         handleAllExaminations();
     } else {
         console.log("Unknown command");
@@ -65,8 +66,7 @@ function handleAllExaminations() {
 
 function getLastExaminationByPatient(first_name, last_name) {
     var patient = {first_name: first_name, last_name: last_name};
-    console.log(patient);
-   client.getLastExaminationByPatient(patient, function (err, examination) {
+    client.getLastExaminationByPatient(patient, function (err, examination) {
         if(err) {
             console.log(err);
         } else {
@@ -76,5 +76,43 @@ function getLastExaminationByPatient(first_name, last_name) {
                 console.log(examination);
             }
         }
+    });
+}
+
+function getAllExaminationByPatient(first_name, last_name) {
+    var patient = {first_name: first_name, last_name: last_name};
+    var call = client.getAllExaminationByPatient(patient);
+    call.on('data', function(feature) {
+        console.log("id:", feature.id);
+        console.log("date:", feature.date);
+        console.log("doctor:", feature.doctor);
+        console.log("parameters:", feature.results.parameters);
+        console.log("")
+        });
+        call.on('end', function() {
+            console.log("All Examinations had been sent");
+        });
+        call.on('status', function(status) {
+        });
+}
+
+
+function getAllExaminationWithGivenParamaterName(word) {
+    var request = {
+            "name": word
+    };
+    console.log(request);
+    var call = client.getAllExaminationWithGivenParameterName(request);
+    call.on('data', function(feature) {
+        console.log("id:", feature.id);
+        console.log("date:", feature.date);
+        console.log("doctor:", feature.doctor);
+        console.log("parameters:", feature.results.parameters);
+        console.log("")
+    });
+    call.on('end', function() {
+        console.log("All Examinations had been sent");
+    });
+    call.on('status', function(status) {
     });
 }
