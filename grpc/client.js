@@ -50,16 +50,10 @@ rl.on('line', function(line) {
 function handleAllExaminations() {
     var call = client.getAllExaminations();
     call.on('data', function(feature) {
-    console.log("id:", feature.id);
-    console.log("date:", feature.date);
-    console.log("doctor:", feature.doctor);
-    console.log("parameters:", feature.results.parameters);
-    console.log("")
+       printExamination(feature);
     });
     call.on('end', function() {
       console.log("All Examinations had been received");
-    });
-    call.on('status', function(status) {
     });
 }
 
@@ -82,16 +76,10 @@ function getAllExaminationByPatient(first_name, last_name) {
     var patient = {first_name: first_name, last_name: last_name};
     var call = client.getAllExaminationByPatient(patient);
     call.on('data', function(feature) {
-        console.log("id:", feature.id);
-        console.log("date:", feature.date);
-        console.log("doctor:", feature.doctor);
-        console.log("parameters:", feature.results.parameters);
-        console.log("")
+        printExamination(feature);
         });
         call.on('end', function() {
             console.log("All Examinations had been received");
-        });
-        call.on('status', function(status) {
         });
 }
 
@@ -103,16 +91,10 @@ function getAllExaminationWithGivenParamaterName(parameter) {
     console.log(request);
     var call = client.getAllExaminationWithGivenParameterName(request);
     call.on('data', function(feature) {
-        console.log("id:", feature.id);
-        console.log("date:", feature.date);
-        console.log("doctor:", feature.doctor);
-        console.log("parameters:", feature.results.parameters);
-        console.log("")
+      printExamination(feature);
     });
     call.on('end', function() {
         console.log("All Examinations had been received");
-    });
-    call.on('status', function(status) {
     });
 }
 
@@ -126,16 +108,10 @@ function getAllExaminationWithGivenParamaterNameAndRange(word, lower_bound, uppe
     };
     var call = client.getAllExaminationWithGivenParameterNameAndRange(query);
     call.on('data', function(feature) {
-        console.log("id:", feature.id);
-        console.log("date:", feature.date);
-        console.log("doctor:", feature.doctor);
-        console.log("parameters:", feature.results.parameters);
-        console.log("")
+      printExamination(feature);
     });
     call.on('end', function() {
         console.log("All Examinations had been sent");
-    });
-    call.on('status', function(status) {
     });
 }
 
@@ -165,4 +141,12 @@ function insertExamination(doctor_first_name, doctor_last_name, patient_first_na
             console.log(examination);
         }
     });
+}
+
+function printExamination(feature) {
+    console.log("id:", feature.id);
+    console.log("date:", feature.date);
+    console.log("doctor:", feature.doctor);
+    console.log("parameters:", feature.results.parameters);
+    console.log(" ");
 }

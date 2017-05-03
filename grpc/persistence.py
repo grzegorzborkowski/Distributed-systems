@@ -73,7 +73,6 @@ def create_examinations():
         ])
 
 
-
 def create_patients():
         patients.extend([
             services_pb2.Patient(
@@ -87,6 +86,15 @@ def create_patients():
         ])
 
 
+def insert_examination(examination, patient):
+    for pat in patients:
+        if pat.first_name == patient.first_name and pat.last_name == patient.last_name:
+            pat.examinations.extend([examination])
+            global examination_id
+            examination_id += 1
+            break
+
+
 def insert_patient(patient_first_name, patient_last_name):
     patients.append([
         services_pb2.Patient(
@@ -96,17 +104,9 @@ def insert_patient(patient_first_name, patient_last_name):
         )
     ])
 
+
 create_results()
 create_doctors()
 create_examinations()
 examination_id = examination_id + 3
 create_patients()
-
-
-def insert_examination(examination, patient):
-    for pat in patients:
-        if pat.first_name == patient.first_name and pat.last_name == patient.last_name:
-            pat.examinations.extend([examination])
-            global examination_id
-            examination_id += 1
-            break
