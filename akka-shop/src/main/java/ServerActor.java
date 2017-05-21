@@ -4,6 +4,7 @@ import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import model.FindResult;
+import model.OrderRequest;
 import model.Request;
 
 import java.util.HashMap;
@@ -17,6 +18,8 @@ public class ServerActor extends AbstractActor {
     private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
     private final ActorRef first_databasefindActor = getContext().getSystem().actorOf(Props.create(DatabaseFinderActor.class, CSV_FIRST_DB_NAME));
     private final ActorRef second_databasefindActor = getContext().getSystem().actorOf(Props.create(DatabaseFinderActor.class, CSV_SECOND_DB_NAME));
+    private final ActorRef order_Actor = getContext().getSystem().actorOf(Props.create(OrderActor.class, first_databasefindActor, second_databasefindActor));
+
     private  ActorRef clientRef;
     private Map<String, Double> receivedFindResults;
 
@@ -29,18 +32,21 @@ public class ServerActor extends AbstractActor {
     public Receive createReceive() {
         return receiveBuilder()
                 .match(Request.class, request -> {
+                    if (clientRef == null) {
+                        clientRef = getSender();
+                        log.info("[Server] Client Ref is: {} ", clientRef);
+                    }
                         switch (request.code) {
                             case FIND:
-                                if (clientRef == null) {
-                                    clientRef = getSender();
-                                }
-                                    log.info("[Server] Client Ref is: {} ", clientRef);
-                                    log.info("[Server]: Received string message : {}", request);
+                                    log.info("[Server]: Received FIND request : {}", request);
                                     first_databasefindActor.tell(request.bookName, getSelf());
                                     second_databasefindActor.tell(request.bookName, getSelf());
                                     break;
                             case ORDER:
-                                break;
+                                    log.info("[Server]: Received ORDER request: {}", request);
+                                    OrderRequest orderRequest = new OrderRequest(getSender(), request.bookName);
+                                    order_Actor.tell(orderRequest, getSender());
+                                    break;
                             case STREAM:
                                 break;
                         }

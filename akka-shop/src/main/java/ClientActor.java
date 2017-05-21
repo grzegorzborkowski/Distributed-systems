@@ -3,6 +3,8 @@ import akka.actor.ActorSelection;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import model.FindResult;
+import model.OrderConfirmation;
+import model.OrderResponse;
 import model.Request;
 
 public class ClientActor extends AbstractActor {
@@ -15,10 +17,11 @@ public class ClientActor extends AbstractActor {
                 .match(Request.class, request -> {
                     switch (request.code) {
                         case FIND:
-                            log.info("[Client] Received find order: {}. Passing this message to server", request);
+                            log.info("[Client] Received find request: {}. Passing this message to server", request);
                             serverRef.tell(request, getSelf());
                         case ORDER:
-                            break;
+                            log.info("[Client] Received order request: {}. Passing this message to server", request);
+                            serverRef.tell(request, getSelf());
                         case STREAM:
                             break;
                     }
@@ -28,6 +31,13 @@ public class ClientActor extends AbstractActor {
                         log.info("[Client] Book: {} doesn't exist in database", result.getBookName());
                     } else {
                         log.info("[Client] Book: {} cost: {}", result.getBookName(), result.getPrice());
+                    }
+                })
+                .match(OrderResponse.class, orderResponse -> {
+                    if(orderResponse.getOrderConfirmation() == OrderConfirmation.SUCCESS) {
+                        log.info("[Client] Book : {} order saved successfully", orderResponse.getBookName());
+                    } else {
+                        log.info("[Client] Book: {} order failed because such book doesn't exist in database", orderResponse.getBookName());
                     }
                 })
                 .matchAny(any -> log.info("[Client] Received unkown message"))
