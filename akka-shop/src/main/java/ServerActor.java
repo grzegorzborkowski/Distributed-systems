@@ -4,9 +4,11 @@ import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import model.FindResult;
+import model.Request;
 
 import java.util.HashMap;
 import java.util.Map;
+
 
 public class ServerActor extends AbstractActor {
     private static final String CSV_FIRST_DB_NAME = "csv/first_db.csv";
@@ -26,24 +28,33 @@ public class ServerActor extends AbstractActor {
     @Override
     public Receive createReceive() {
         return receiveBuilder()
-                .match(String.class, s -> {
-                    if(clientRef == null) {
-                        clientRef = getSender();
-                    }
-                    log.info("[Server] Client Ref is: {} ", clientRef);
-                    log.info("[Server]: Received string message : {}", s);
-                    first_databasefindActor.tell(s, getSelf());
-                    second_databasefindActor.tell(s, getSelf());
-                })
+                .match(Request.class, request -> {
+                        switch (request.code) {
+                            case FIND:
+                                if (clientRef == null) {
+                                    clientRef = getSender();
+                                }
+                                    log.info("[Server] Client Ref is: {} ", clientRef);
+                                    log.info("[Server]: Received string message : {}", request);
+                                    first_databasefindActor.tell(request.bookName, getSelf());
+                                    second_databasefindActor.tell(request.bookName, getSelf());
+                                    break;
+                            case ORDER:
+                                break;
+                            case STREAM:
+                                break;
+                        }
+                    })
                 .match(FindResult.class, findResult -> {
                     log.info("[Server]: Received price of a book: {} {}",
                             findResult.getBookName(), findResult.getPrice());
                     if(findResult.getPrice() != -1) {
                         receivedFindResults.put(findResult.getBookName(), findResult.getPrice());
-                        clientRef.tell("result " + findResult.getBookName() + " " + findResult.getPrice(), null);
+                        clientRef.tell(findResult, null);
                     } else {
                         if(!receivedFindResults.containsKey(findResult.getBookName())) {
-                            clientRef.tell("result " + findResult.getBookName() + " doesn't exist in database", null);
+                            FindResult result = new FindResult(findResult.getBookName(), -1);
+                            clientRef.tell(result, null);
                         }
                     }
                 })

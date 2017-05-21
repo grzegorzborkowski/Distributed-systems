@@ -14,15 +14,13 @@ public class DatabaseFinderActor extends AbstractActor{
 
     public DatabaseFinderActor(String filenamepath) {
         this.path = filenamepath;
-
     }
 
     @Override
     public Receive createReceive() {
         return receiveBuilder()
-                .match(String.class, s -> {
-                    log.info("[DatabaseFinder:{}]: Received string message : {}", path, s);
-                    String bookName = s.split(" ")[1];
+                .match(String.class, bookName -> {
+                    log.info("[DatabaseFinder:{}]: Received string message : {}", path, bookName);
                     double bookPrice = getPrice(bookName);
                     FindResult findResult = new FindResult(bookName, bookPrice);
                     this.getSender().tell(findResult, null);
