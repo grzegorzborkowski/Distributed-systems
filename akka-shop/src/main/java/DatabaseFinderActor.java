@@ -21,10 +21,10 @@ public class DatabaseFinderActor extends AbstractActor{
     public Receive createReceive() {
         return receiveBuilder()
                 .match(String.class, s -> {
-                    log.info("[DatabaseFinder]: Received string message : {}", s);
+                    log.info("[DatabaseFinder:{}]: Received string message : {}", path, s);
                     String bookName = s.split(" ")[1];
                     double bookPrice = getPrice(bookName);
-                    FindResult findResult = new FindResult(bookName, bookPrice, this.path);
+                    FindResult findResult = new FindResult(bookName, bookPrice);
                     this.getSender().tell(findResult, null);
                 })
                 .matchAny(any -> log.info("[DatabaseFinder]: Received unkown message"))

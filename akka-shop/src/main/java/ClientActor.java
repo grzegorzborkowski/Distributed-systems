@@ -13,13 +13,14 @@ public class ClientActor extends AbstractActor {
                 .match(String.class, s -> {
                     if(s.startsWith("find")) {
                         log.info("[Client] Received find order: {}. Passing this message to server", s);
-                        serverRef.tell(s, null);
+                        serverRef.tell(s, getSelf());
                     } else if(s.startsWith("order")) {
 
                     } else if(s.startsWith("stream")) {
 
-                    } else {
-                        log.info("Received unknown message : {}", s);
+                    } else if (s.startsWith("result")){
+                        String [] split = s.split(" ");
+                        log.info("[Client] Book: {} cost: {}", split[1], split[2]);
                     }
 
                 })

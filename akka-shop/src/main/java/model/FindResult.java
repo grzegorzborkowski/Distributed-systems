@@ -4,13 +4,11 @@ import java.io.Serializable;
 
 public class FindResult implements Serializable {
     private String bookName;
-    private String sender;
     private double price;
 
-    public FindResult(String bookName, double price, String sender) {
+    public FindResult(String bookName, double price) {
         this.bookName = bookName;
         this.price = price;
-        this.sender = sender;
     }
 
     public String getBookName() {
@@ -21,7 +19,11 @@ public class FindResult implements Serializable {
         return price;
     }
 
-    public String getSender() {
-        return sender;
+    public void setBookName(String bookName) {
+        this.bookName = bookName;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
     }
 }
