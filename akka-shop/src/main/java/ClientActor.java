@@ -19,12 +19,15 @@ public class ClientActor extends AbstractActor {
                         case FIND:
                             log.info("[Client] Received find request: {}. Passing this message to server", request);
                             serverRef.tell(request, getSelf());
+                            break;
                         case ORDER:
                             log.info("[Client] Received order request: {}. Passing this message to server", request);
                             serverRef.tell(request, getSelf());
+                            break;
                         case STREAM:
                             log.info("[Client] Received stream request: {}. Passing this message to server", request);
                             serverRef.tell(request, getSelf());
+                            break;
                     }
                 })
                 .match(FindResult.class, result -> {

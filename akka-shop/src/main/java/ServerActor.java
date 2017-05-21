@@ -30,7 +30,7 @@ public class ServerActor extends AbstractActor {
     private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
     private final ActorRef first_databasefindActor = getContext().getSystem().actorOf(Props.create(DatabaseFinderActor.class, CSV_FIRST_DB_NAME));
     private final ActorRef second_databasefindActor = getContext().getSystem().actorOf(Props.create(DatabaseFinderActor.class, CSV_SECOND_DB_NAME));
-    private final ActorRef order_Actor = getContext().getSystem().actorOf(Props.create(OrderActor.class, first_databasefindActor, second_databasefindActor));
+    private final ActorRef order_Actor = getContext().getSystem().actorOf(Props.create(OrderActor.class));
     private final Materializer materalizer = ActorMaterializer.create(getContext().getSystem());
 
     private ActorRef clientRef;
@@ -39,7 +39,6 @@ public class ServerActor extends AbstractActor {
     public ServerActor() {
         log.info("Created server successfully : {}", getSelf());
         this.receivedFindResults = new HashMap<>();
-//        source.runForeach(i -> System.out.println(i), materalizer);
     }
 
     @Override
