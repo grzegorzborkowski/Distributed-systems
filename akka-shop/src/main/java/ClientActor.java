@@ -5,14 +5,23 @@ import akka.event.LoggingAdapter;
 
 public class ClientActor extends AbstractActor {
     private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
-    private final ActorSelection actorRef = getContext().actorSelection("../server");
+    private final ActorSelection serverRef = getContext().actorSelection("../server");
 
     @Override
     public Receive createReceive() {
         return receiveBuilder()
                 .match(String.class, s -> {
-                    log.info("Received string message : {}", s);
-                    actorRef.tell("Hello", self());
+                    if(s.startsWith("find")) {
+                        log.info("[Client] Received find order: {}. Passing this message to server", s);
+                        serverRef.tell(s, null);
+                    } else if(s.startsWith("order")) {
+
+                    } else if(s.startsWith("stream")) {
+
+                    } else {
+                        log.info("Received unknown message : {}", s);
+                    }
+
                 })
                 .matchAny(any -> log.info("Received unkown message"))
                 .build();
