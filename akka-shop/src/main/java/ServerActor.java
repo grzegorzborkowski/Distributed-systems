@@ -1,31 +1,45 @@
+import akka.NotUsed;
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import akka.stream.ActorMaterializer;
+import akka.stream.Materializer;
+import akka.stream.ThrottleMode;
+import akka.stream.javadsl.Source;
 import model.FindResult;
 import model.OrderRequest;
 import model.Request;
+import scala.concurrent.duration.Duration;
 
+import java.io.File;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 
 public class ServerActor extends AbstractActor {
     private static final String CSV_FIRST_DB_NAME = "csv/first_db.csv";
     private static final String CSV_SECOND_DB_NAME = "csv/second_db.csv";
+    private static final String STREAM_BOOK_FILENAME = "books/example_book.txt";
 
     private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
     private final ActorRef first_databasefindActor = getContext().getSystem().actorOf(Props.create(DatabaseFinderActor.class, CSV_FIRST_DB_NAME));
     private final ActorRef second_databasefindActor = getContext().getSystem().actorOf(Props.create(DatabaseFinderActor.class, CSV_SECOND_DB_NAME));
     private final ActorRef order_Actor = getContext().getSystem().actorOf(Props.create(OrderActor.class, first_databasefindActor, second_databasefindActor));
+    private final Materializer materalizer = ActorMaterializer.create(getContext().getSystem());
 
-    private  ActorRef clientRef;
+    private ActorRef clientRef;
     private Map<String, Double> receivedFindResults;
 
     public ServerActor() {
         log.info("Created server successfully : {}", getSelf());
         this.receivedFindResults = new HashMap<>();
+//        source.runForeach(i -> System.out.println(i), materalizer);
     }
 
     @Override
@@ -48,6 +62,12 @@ public class ServerActor extends AbstractActor {
                                     order_Actor.tell(orderRequest, getSender());
                                     break;
                             case STREAM:
+                                log.info("[Server]: Received STREAM request. {} Starting streaming to Client ...", request);
+                                List<String> lineList = Files.readAllLines(new File(STREAM_BOOK_FILENAME).toPath(),
+                                        Charset.defaultCharset() );
+                                final Source<String, NotUsed> source = Source.from(lineList).
+                                throttle(1, Duration.create(1, TimeUnit.SECONDS), 1, ThrottleMode.shaping());
+                                sendStream(source, getSender());
                                 break;
                         }
                     })
@@ -66,5 +86,9 @@ public class ServerActor extends AbstractActor {
                 })
                 .matchAny(any -> log.info("[Server]: Received unkown message"))
                 .build();
+    }
+
+    private void sendStream(Source<String, NotUsed> source, ActorRef sender) {
+        source.runForeach(i -> sender.tell(i, getSelf()), materalizer);
     }
 }

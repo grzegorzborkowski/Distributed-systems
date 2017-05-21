@@ -13,7 +13,7 @@ public class Main {
         ActorSystem actorSystem = ActorSystem.create("BookShop");
         actorSystem.actorOf(Props.create(ServerActor.class), "server");
         ActorRef client = actorSystem.actorOf(Props.create(ClientActor.class), "client");
-        System.out.println("Menu: find [name], order [name], stream[name], q");
+        System.out.println("Menu: find [name], order [name], stream , q");
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
         while (true) {
@@ -28,7 +28,7 @@ public class Main {
             } else if(split[0].startsWith("order")) {
                 request = new Request(RequestCode.ORDER, split[1]);
             } else if(split[0].startsWith("stream")) {
-                request = new Request(RequestCode.STREAM, split[1]);
+                request = new Request(RequestCode.STREAM, null);
             } else {
                 System.out.println("Unknown command!");
             }

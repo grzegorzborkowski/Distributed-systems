@@ -35,18 +35,16 @@ public class OrderActor extends AbstractActor {
                             this.client = getSender();
                 })
                 .match(FindResult.class, findResult -> {
-                    System.out.println("receivedResponse, price, bookSaved state" + receivedResponse + findResult.getPrice() + bookSaved);
-                    receivedResponse += 1;
-                    if(findResult.getPrice() != -1 && !bookSaved) {
-                        makeOrder(findResult.getBookName() + "\n");
-                        this.bookSaved = true;
-                        OrderResponse orderResponse = new OrderResponse(findResult.getBookName(), OrderConfirmation.SUCCESS);
-                        sendResponseToClient(orderResponse);
-                    }
-                    else if(findResult.getPrice() == -1 && receivedResponse==2 && !this.bookSaved) {
-                        OrderResponse orderResponse = new OrderResponse(findResult.getBookName(), OrderConfirmation.FAILURE);
-                        sendResponseToClient(orderResponse);
-                    }
+                        receivedResponse += 1;
+                        if (findResult.getPrice() != -1 && !bookSaved) {
+                            makeOrder(findResult.getBookName() + "\n");
+                            this.bookSaved = true;
+                            OrderResponse orderResponse = new OrderResponse(findResult.getBookName(), OrderConfirmation.SUCCESS);
+                            sendResponseToClient(orderResponse);
+                        } else if (findResult.getPrice() == -1 && receivedResponse == 2 && !this.bookSaved) {
+                            OrderResponse orderResponse = new OrderResponse(findResult.getBookName(), OrderConfirmation.FAILURE);
+                            sendResponseToClient(orderResponse);
+                        }
                 })
                 .matchAny(any -> log.info("[Order] Unknown message received"))
                 .build();

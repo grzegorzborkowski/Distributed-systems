@@ -23,7 +23,8 @@ public class ClientActor extends AbstractActor {
                             log.info("[Client] Received order request: {}. Passing this message to server", request);
                             serverRef.tell(request, getSelf());
                         case STREAM:
-                            break;
+                            log.info("[Client] Received stream request: {}. Passing this message to server", request);
+                            serverRef.tell(request, getSelf());
                     }
                 })
                 .match(FindResult.class, result -> {
@@ -39,6 +40,9 @@ public class ClientActor extends AbstractActor {
                     } else {
                         log.info("[Client] Book: {} order failed because such book doesn't exist in database", orderResponse.getBookName());
                     }
+                })
+                .match(String.class, s -> {
+                    log.info("[Client] Received : {}", s);
                 })
                 .matchAny(any -> log.info("[Client] Received unkown message"))
                 .build();
